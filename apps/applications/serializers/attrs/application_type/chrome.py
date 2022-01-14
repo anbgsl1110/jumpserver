@@ -29,3 +29,6 @@ class ChromeSecretSerializer(ChromeSerializer):
         max_length=128, allow_blank=True, required=False, read_only=True, label=_('Password'),
         allow_null=True
     )
+
+    def get_backup_fields(self):
+        return ['path', 'chrome_target', 'chrome_username', 'chrome_password']
