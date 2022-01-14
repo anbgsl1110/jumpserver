@@ -3,29 +3,31 @@
 from django.db import migrations, models
 
 from common.utils.timezone import as_current_tz
+from orgs.utils import tmp_to_root_org
 
 
 def fill_ticket_serial_number(apps, schema_editor):
-    Ticket = apps.get_model('tickets', 'Ticket')
-    tickets = Ticket.objects.all().order_by('date_created')
+    with tmp_to_root_org():
+        Ticket = apps.get_model('tickets', 'Ticket')
+        tickets = Ticket.objects.all().order_by('date_created')
 
-    curr_day = '00000000'
-    curr_num = 1
+        curr_day = '00000000'
+        curr_num = 1
 
-    print(f'\nFill ticket serial number ... ', end='')
-    for ticket in tickets:
-        # 跑这个脚本的时候，所有 ticket.serial_num == null
-        date_created = as_current_tz(ticket.date_created)
-        date_str = date_created.strftime('%Y%m%d')
-        if date_str != curr_day:
-            curr_day = date_str
-            curr_num = 1
+        print(f'\nFill ticket serial number ... ', end='')
+        for ticket in tickets:
+            # 跑这个脚本的时候，所有 ticket.serial_num == null
+            date_created = as_current_tz(ticket.date_created)
+            date_str = date_created.strftime('%Y%m%d')
+            if date_str != curr_day:
+                curr_day = date_str
+                curr_num = 1
 
-        ticket.serial_num = curr_day + '%04d' % curr_num
-        curr_num += 1
+            ticket.serial_num = curr_day + '%04d' % curr_num
+            curr_num += 1
 
-    Ticket.objects.bulk_update(tickets, fields=('serial_num',))
-    print(len(tickets), end='')
+        Ticket.objects.bulk_update(tickets, fields=('serial_num',))
+        print(len(tickets), end='')
 
 
 class Migration(migrations.Migration):
